@@ -1,0 +1,43 @@
+import logging 
+from logging.handlers import TimedRotatingFileHandler
+from datetime import datetime
+import os 
+import sys 
+
+
+LOG_PATH = 'logs'
+
+class AppLogger:
+
+    def __init__(self,name):
+
+        # ---------------------
+        # Setting up logger 
+        # ---------------------
+
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.INFO)
+
+        logfname = os.path.join(LOG_PATH, f'korean_fashionistas_attic_{datetime.now().strftime("%Y_%m_%d")}.log')
+
+        formatter = logging.Formatter("[%(asctime)s]:[%(name)s]:[%(funcName)s:%(lineno)s]:[%(levelname)s]:%(message)s")
+        file_handler = TimedRotatingFileHandler(logfname, when= 'midnight')
+        file_handler.setFormatter(formatter)
+
+        stdout_formatter = logging.Formatter("[*] => %(message)s")
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setFormatter(stdout_formatter)
+
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(stdout_handler)
+
+
+    def getlogger(self):
+
+        ''' returning logger object'''
+
+        return self.logger
+
+
+
+
