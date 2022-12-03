@@ -10,12 +10,16 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common import keys
 from selenium.webdriver.remote.webelement import WebElement
 
+from applogger import AppLogger
+
+logger = AppLogger(__name__).getlogger()
 
 class InstaCrawler:
 
-    def __init__(self,username = None,password = None) -> None:
+    def __init__(self,username = None,password = None,target = None,timeout = 20) -> None:
         self.username = username
         self.password = password
+        self.target = target
 
         #chrome 
         options = ChromeOptions()
@@ -29,11 +33,42 @@ class InstaCrawler:
 
         self.baseurl = "https://www.instagram.com"
         self.targeturl = self.baseurl
+        self.wait = WebDriverWait(self.driver,timeout)
     
 
     def get_target_url(self):
         self.driver.get(self.baseurl)
 
+    def validate_login(self):
+        """
+        validate login
+        """
 
-insta = InstaCrawler()
-insta.get_target_url()
+        user_profile_xpaths = [
+            '//div[@class="_acut"]/div/span/img',
+            '//img[contains(@alt, f"{self.username}\'s profile picture")]'
+        ]
+
+        for xpath in user_profile_xpaths:
+            try:
+                logger.info(f'validating login with xpath: {xpath}')
+                self.wait.until(EC.presence_of_element_located((By.XPATH,xpath)))
+                return True
+            except:
+                logger.error(f'Could not find user\'s profile')
+
+        return False
+
+    def login(self):
+        try:
+            self.wait.until(EC.presence_of_element_located((By.XPATH, '//input[@name="username"]'))).send_keys(self.username)
+            self.wait.until(EC.presence_of_element_located((By.XPATH, '//input[@name="password"]'))).send_keys(self.password)
+            self.wait.until(EC.presence_of_element_located((By.XPATH, '//button[@type="submit"]'))).click()
+            if not self.validate_login():
+                return False
+                
+            return True
+        except:
+            return False
+
+
